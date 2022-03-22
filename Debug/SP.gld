@@ -1,0 +1,8 @@
+-T "C:\Users\dinhg\Documents\School\06\POT\workspace\SP\Debug\SP_Debug_auto.gsi"
+-T "C:\Users\dinhg\Documents\School\06\POT\workspace\SP\Debug\SP_input.tmp" 
+-L "c:\program files (x86)\hew\tools\kpit cummins\gnuh8-elf\v11.02\h8300-elf\lib\gcc\h8300-elf\4.5-GNUH8_v11.02\h8300s"
+-L "C:\Users\dinhg\Documents\School\06\POT\workspace\SP\Debug"
+-Map "C:\Users\dinhg\Documents\School\06\POT\workspace\SP\Debug\SP.map"
+-( -l "gcc" -l "SP" -)
+-o "C:\Users\dinhg\Documents\School\06\POT\workspace\SP\Debug\SP.x"
+-e _start
