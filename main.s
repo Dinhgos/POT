@@ -4,79 +4,71 @@
 				.equ PUTS,0x0114                   ; kod PUTS
 				.equ GETS,0x0113                   ; kod GETS
 
-; ------ datovy segment ----------------------------
+;-----------------------------------------------------
+; data segment
+;-----------------------------------------------------
 				.data
 
-txt1: 			.asciz 	"Zadejte vstup:\n" 	; vypisovany text ukonceny \n (=0x0d 0x0a)
-buffer: 		.space 	500 				; vstupni buffer, max.19znaku +enter
-counter1: 		.long 	0x0					; number of words in stack
-counter2: 		.long 	0x0					; number of words in stack
-out_buf:		.space	3200
-num_buf:		.space	20
+txt1: 			.asciz 	"Zadejte vstup:\n" 			; output text
+buffer: 		.space 	500 						; input buffer
+counter1: 		.long 	0x0							; number of words in stack
+counter2: 		.long 	0x0							; number of words in stack
+out_buf:		.space	3200						; output buffer
+num_buf:		.space	20							; number buffer for hex to ascii
 
-				.align 	2 					; zarovnani adresy (parametricke bloky musi byt zarovnane na 4B
-par1: 			.long 	txt1 				; parametricky blok 1 � ukazatel na vystupni buffer
-par2: 			.long 	buffer 				; parametricky blok 2 � ukazatel na vstupni buffe
-out:			.long	out_buf
-num:			.long	num_buf
+				.align 	2 							; 4B
+par1: 			.long 	txt1 						; pointer to output text
+par2: 			.long 	buffer 						; pointer to input buffer
+out:			.long	out_buf						; pointer to output buffer
+num:			.long	num_buf						; pointer to number buffer
 
 				.align	1
-				.space 	800
+				.space 	800							; first array
 stack1:
 
-				.space 	800
+				.space 	800							; second array
 stack2:
 
-				.space	1600
+				.space	1600						; output array
 final_stack:
 
-				.space	100
+				.space	100							; main stack
 stck:
 
-; ------ kodovy segment ----------------------------
-
+;-----------------------------------------------------
+; code segment
+;-----------------------------------------------------
 				.text
 				.global _start
 
 _start:			mov.l	#stck,ER7
-
-				xor		ER0,ER0
-				xor		ER1,ER1
-				xor		ER2,ER2
-				xor		ER3,ER3
-				xor		ER4,ER4
-				xor		ER5,ER5
-				xor		ER6,ER6
 									
-				mov.w 	#PUTS,R0 	; kod slu�by PUTS do ROH,R0L
-				mov.l 	#par1,ER1 	; adr. param. bloku do ER1
-				jsr 	@syscall 	; volani syst.fce = vypsani textu txt1
+				mov.w 	#PUTS,R0
+				mov.l 	#par1,ER1
+				jsr 	@syscall
 				
-				mov.w 	#GETS,R0 	; kod sluzby GETS do R0H,R0L
-				mov.l 	#par2,ER1 	; adr. param. bloku do ER1
-				jsr 	@syscall 	; volani syst.fce = uzivatel zada text, ktery bude ulozen do buffer
+				mov.w 	#GETS,R0
+				mov.l 	#par2,ER1
+				jsr 	@syscall
 				
-				mov.l 	#buffer,ER6 ; adresa retezce do ER6 (vstupni param.fce)
-				jsr 	@ascii_hex00 	; volani funkce prevod
-				inc		#1,ER3
+				mov.l 	#buffer,ER6
+				jsr 	@ascii_hex00
 				
-				mov.w 	#PUTS,R0 	; kod slu�by PUTS do ROH,R0L
-				mov.l 	#par1,ER1 	; adr. param. bloku do ER1
-				jsr 	@syscall 	; volani syst.fce = vypsani textu txt1
+				mov.w 	#PUTS,R0
+				mov.l 	#par1,ER1
+				jsr 	@syscall
 				
-				mov.w 	#GETS,R0 	; kod sluzby GETS do R0H,R0L
-				mov.l 	#par2,ER1 	; adr. param. bloku do ER1
-				jsr 	@syscall 	; volani syst.fce = uzivatel zada text, ktery bude ulozen do buffer
+				mov.w 	#GETS,R0
+				mov.l 	#par2,ER1
+				jsr 	@syscall
 				
 				xor		ER5, ER5
 				mov.l	ER5, @counter2
 				
-				mov.l 	#buffer,ER6 ; adresa retezce do ER6 (vstupni param.fce)
-				jsr 	@ascii_hex10 	; volani funkce prevod
+				mov.l 	#buffer,ER6
+				jsr 	@ascii_hex10
 				
 				jsr		sort
-				
-				;jsr		print
 				
 end: 			jmp 	@end 		; konec
 
@@ -91,7 +83,7 @@ ascii_hex00:	; --- funkce prevod ASCII retezec->cislo
 				mov.w 	#10,E1
 
 ascii_hex01: 	mov.b 	@ER6,R1L 	;precti znak z pameti
-				cmp.b 	#0x20,R1L 	; test na konec (CR)
+				cmp.b 	#0x3B,R1L 	; test na konec (CR)
 				beq 	push_stack01 ;je konec, tj. Znak = CR
 				cmp.b 	#0x0A,R1L 	; test na konec (CR)
 				beq 	return		; TODO save and exit
@@ -133,7 +125,7 @@ ascii_hex10:	; --- funkce prevod ASCII retezec->cislo
 				mov.w 	#10,E1
 
 ascii_hex11: 	mov.b 	@ER6,R1L 	;precti znak z pameti
-				cmp.b 	#0x20,R1L 	; test na konec (CR)
+				cmp.b 	#0x3B,R1L 	; test na konec (CR)
 				beq 	push_stack11 ;je konec, tj. Znak = CR
 				cmp.b 	#0x0A,R1L 	; test na konec (CR)
 				beq 	return		; TODO save and exit
@@ -183,6 +175,8 @@ compare:		mov.l	@ER1, ER5
 				
 r_compare:		cmp.w	R5, R6
 				bhi		save1			; if ER5 < ER6
+				cmp.w	#0xFFFF, R6
+				beq		max_num
 				jmp		save2			; else
 				
 				rts
@@ -207,7 +201,12 @@ rest1:			mov.w	#0xFFFF, R5
 rest2:			mov.w	#0xFFFF, R6
 				cmp		#0x0, ER2
 				beq		print
-				jmp 	r_compare						; no more numbers in stack
+				jmp 	r_compare						; no more numbers in stack		
+				
+max_num:		
+				cmp.w	#0x0, R4
+				beq		save1
+				jmp 	save2
 				
 ;-----------------------------------------------------
 ; print out
